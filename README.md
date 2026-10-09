@@ -175,3 +175,11 @@ Open `http://localhost:5500` in your web browser.
 2. **Layered Architecture:** Clear separation between Controllers (REST API), Services (Business Logic), Utilities (Stateless helpers), and Security Filters.
 3. **Concurrency Control:** Atomic transactions in [`ContributionService.java`](file:///c:/Users/ayush/OneDrive/Desktop/Java%20Sem%203/Project/backend/src/main/java/com/crowdfund/service/ContributionService.java) prevent race conditions when multiple contributors support a campaign simultaneously.
 4. **Exception Handling:** Centralized [`GlobalExceptionHandler`](file:///c:/Users/ayush/OneDrive/Desktop/Java%20Sem%203/Project/backend/src/main/java/com/crowdfund/exception/GlobalExceptionHandler.java) translates [`AppException`](file:///c:/Users/ayush/OneDrive/Desktop/Java%20Sem%203/Project/backend/src/main/java/com/crowdfund/exception/AppException.java) instances into standard HTTP responses.
+
+
+
+
+
+mvn spring-boot:run 
+run the above cmd in the backend folder
+

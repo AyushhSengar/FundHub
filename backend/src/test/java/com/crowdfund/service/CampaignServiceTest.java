@@ -28,6 +28,9 @@ class CampaignServiceTest {
     @Mock
     private Firestore db;
 
+    @Mock
+    private AuditService auditService;
+
     @InjectMocks
     private CampaignService campaignService;
 
@@ -101,20 +104,17 @@ class CampaignServiceTest {
 
         List<Campaign> list = List.of(c1, c2, c3);
 
-        // ADMIN view: pending campaigns come first
         CampaignFilterCriteria emptyCriteria = CampaignFilterCriteria.empty();
         List<Campaign> adminSorted = campaignService.filterAndSortCampaigns(list, emptyCriteria, "ADMIN");
-        assertEquals("2", adminSorted.get(0).getId()); // PENDING first
-        assertEquals("1", adminSorted.get(1).getId()); // APPROVED next
-        assertEquals("3", adminSorted.get(2).getId()); // COMPLETED last
+        assertEquals("2", adminSorted.get(0).getId());
+        assertEquals("1", adminSorted.get(1).getId());
+        assertEquals("3", adminSorted.get(2).getId());
 
-        // Search filtering: "planting"
         CampaignFilterCriteria searchCriteria = new CampaignFilterCriteria("planting", "", "", "createdAt", "desc");
         List<Campaign> searched = campaignService.filterAndSortCampaigns(list, searchCriteria, "CONTRIBUTOR");
         assertEquals(1, searched.size());
         assertEquals("2", searched.get(0).getId());
 
-        // Status filtering: "APPROVED"
         CampaignFilterCriteria statusCriteria = new CampaignFilterCriteria("", "APPROVED", "", "createdAt", "desc");
         List<Campaign> statusFiltered = campaignService.filterAndSortCampaigns(list, statusCriteria, "CONTRIBUTOR");
         assertEquals(1, statusFiltered.size());

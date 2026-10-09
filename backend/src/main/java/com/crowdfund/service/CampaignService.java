@@ -3,7 +3,6 @@ package com.crowdfund.service;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -35,9 +34,11 @@ import com.google.cloud.firestore.QueryDocumentSnapshot;
 public class CampaignService {
 
     private final Firestore db;
+    private final AuditService auditService;
 
-    public CampaignService(Firestore db) {
+    public CampaignService(Firestore db, AuditService auditService) {
         this.db = db;
+        this.auditService = auditService;
     }
 
     /**
@@ -56,7 +57,6 @@ public class CampaignService {
         List<QueryDocumentSnapshot> docs = FirestoreSupport.await(query.get()).getDocuments();
         List<Campaign> list = docs.stream().map(this::mapDocToCampaign).collect(Collectors.toList());
 
-        // Apply Java-side filtering & sorting rules
         return filterAndSortCampaigns(list, criteria, role).stream()
                 .map(CampaignResponse::fromModel)
                 .collect(Collectors.toList());
@@ -78,7 +78,6 @@ public class CampaignService {
         Campaign campaign = mapDocToCampaign(doc);
         String role = caller.role() == null ? "" : caller.role().toUpperCase(Locale.ROOT);
 
-        // Security check
         if ("CREATOR".equals(role) && !caller.uid().equals(campaign.getCreatorId())) {
             throw new AppException(HttpStatus.FORBIDDEN, "You do not have permission to view this campaign.");
         }
@@ -115,6 +114,8 @@ public class CampaignService {
 
         FirestoreSupport.await(ref.set(data));
 
+        auditService.recordEvent(caller, "CAMPAIGN_CREATED", "CAMPAIGN", ref.getId(), "Created campaign: " + title);
+
         return Map.of("id", ref.getId(), "status", "PENDING");
     }
 
@@ -124,6 +125,8 @@ public class CampaignService {
         caller.requireRole("ADMIN");
 
         review(campaignId, "APPROVED", "");
+
+        auditService.recordEvent(caller, "CAMPAIGN_APPROVED", "CAMPAIGN", campaignId, "Approved campaign");
 
         return Map.of("id", campaignId, "status", "APPROVED");
     }
@@ -136,6 +139,8 @@ public class CampaignService {
         String reason = Text.require(request.reason(), "Rejection reason", 500);
 
         review(campaignId, "REJECTED", reason);
+
+        auditService.recordEvent(caller, "CAMPAIGN_REJECTED", "CAMPAIGN", campaignId, "Rejected reason: " + reason);
 
         return Map.of("id", campaignId, "status", "REJECTED");
     }
@@ -173,8 +178,6 @@ public class CampaignService {
         });
     }
 
-    // --- Domain Helpers & Calculation Utilities ---
-
     public List<Campaign> filterAndSortCampaigns(List<Campaign> campaigns, CampaignFilterCriteria criteria, String role) {
         if (campaigns == null) {
             return List.of();
@@ -199,7 +202,6 @@ public class CampaignService {
             filtered.add(c);
         }
 
-        // Sorting: ADMIN has PENDING first priority; otherwise by creation date descending
         boolean pendingFirst = "ADMIN".equalsIgnoreCase(role);
         filtered.sort((a, b) -> {
             if (pendingFirst) {

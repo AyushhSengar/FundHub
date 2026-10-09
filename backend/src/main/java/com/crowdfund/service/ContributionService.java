@@ -33,9 +33,11 @@ import com.google.cloud.firestore.QueryDocumentSnapshot;
 public class ContributionService {
 
     private final Firestore db;
+    private final AuditService auditService;
 
-    public ContributionService(Firestore db) {
+    public ContributionService(Firestore db, AuditService auditService) {
         this.db = db;
+        this.auditService = auditService;
     }
 
     /**
@@ -69,7 +71,6 @@ public class ContributionService {
             return d;
         }).collect(Collectors.toList());
 
-        // Fetch campaigns to enrich
         List<String> campaignIds = donations.stream()
                 .map(Donation::getCampaignId)
                 .filter(Objects::nonNull)
@@ -92,7 +93,6 @@ public class ContributionService {
                     campaignMap.put(cId, c);
                 }
             } catch (Exception ignored) {
-                // If campaign document is missing, fallback cleanly
             }
         }
 
@@ -156,7 +156,7 @@ public class ContributionService {
         DocumentReference campaignRef = db.collection("campaigns").document(campaignId);
         DocumentReference donationRef = db.collection("donations").document();
 
-        return FirestoreSupport.transaction(db, transaction -> {
+        Map<String, Object> result = FirestoreSupport.transaction(db, transaction -> {
 
             DocumentSnapshot campaign = transaction.get(campaignRef).get();
 
@@ -212,12 +212,17 @@ public class ContributionService {
 
             transaction.set(donationRef, donation);
 
-            Map<String, Object> result = new HashMap<>();
-            result.put("donationId", donationRef.getId());
-            result.put("collectedAmount", newCollected.doubleValue());
-            result.put("status", newStatus);
+            Map<String, Object> res = new HashMap<>();
+            res.put("donationId", donationRef.getId());
+            res.put("collectedAmount", newCollected.doubleValue());
+            res.put("status", newStatus);
 
-            return result;
+            return res;
         });
+
+        auditService.recordEvent(caller, "CONTRIBUTION_RECORDED", "DONATION", (String) result.get("donationId"),
+                "Recorded simulated contribution of " + amount + " to campaign " + campaignId);
+
+        return result;
     }
 }

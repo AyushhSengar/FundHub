@@ -30,6 +30,9 @@ class ContributionServiceTest {
     @Mock
     private Firestore db;
 
+    @Mock
+    private AuditService auditService;
+
     @InjectMocks
     private ContributionService contributionService;
 
@@ -82,7 +85,6 @@ class ContributionServiceTest {
         List<ContributionHistoryResponse> enriched = contributionService.enrichDonations(List.of(d1, d2), Map.of("c1", c1, "c2", c2));
 
         assertEquals(2, enriched.size());
-        // Sorted by date descending: d2 first, d1 second
         assertEquals("d2", enriched.get(0).id());
         assertEquals("Camp 2", enriched.get(0).campaignTitle());
         assertEquals(100, enriched.get(0).campaignPercentage());

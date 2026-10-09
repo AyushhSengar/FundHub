@@ -32,9 +32,11 @@ public class UserService {
     private static final Set<String> ALL_ROLES = Set.of("ADMIN", "CREATOR", "CONTRIBUTOR");
 
     private final Firestore db;
+    private final AuditService auditService;
 
-    public UserService(Firestore db) {
+    public UserService(Firestore db, AuditService auditService) {
         this.db = db;
+        this.auditService = auditService;
     }
 
     /**
@@ -99,6 +101,8 @@ public class UserService {
             return null;
         });
 
+        auditService.recordEvent(caller, "USER_REGISTERED", "USER", caller.uid(), "Registered user with role " + role);
+
         return Map.of("uid", caller.uid(), "role", role);
     }
 
@@ -137,6 +141,8 @@ public class UserService {
 
             return null;
         });
+
+        auditService.recordEvent(caller, "ROLE_UPDATED", "USER", targetUid, "Changed role of " + targetUid + " to " + role);
 
         return Map.of("uid", targetUid, "role", role);
     }
