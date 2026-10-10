@@ -30,8 +30,9 @@ import com.google.firebase.cloud.FirestoreClient;
  * 1. FIREBASE_SERVICE_ACCOUNT_JSON (direct JSON string, ideal for cloud hosting)
  * 2. FIREBASE_SERVICE_ACCOUNT_PATH (file path, ideal for local Windows/macOS development)
  * 3. GOOGLE_APPLICATION_CREDENTIALS (standard GCP environment variable)
- * 4. Application default credentials
- * 5. Safe local development fallback for offline/development testing
+ * 4. Common local key file locations in user home
+ * 5. Application default credentials
+ * 6. Safe local development fallback for offline/development testing
  */
 @Configuration
 public class FirebaseConfig {
@@ -67,37 +68,48 @@ public class FirebaseConfig {
         return FirebaseApp.initializeApp(options);
     }
 
-    private GoogleCredentials resolveCredentials() throws IOException {
+    private GoogleCredentials resolveCredentials() {
         // 1. Direct JSON content (Production / Cloud Hosting)
         if (serviceAccountJson != null && !serviceAccountJson.isBlank()) {
-            log.info("Loading Firebase credentials from FIREBASE_SERVICE_ACCOUNT_JSON environment variable.");
-            return GoogleCredentials.fromStream(
-                    new ByteArrayInputStream(serviceAccountJson.getBytes(StandardCharsets.UTF_8)));
+            try {
+                log.info("Loading Firebase credentials from FIREBASE_SERVICE_ACCOUNT_JSON environment variable.");
+                return GoogleCredentials.fromStream(
+                        new ByteArrayInputStream(serviceAccountJson.getBytes(StandardCharsets.UTF_8)));
+            } catch (Exception e) {
+                log.warn("Failed to parse FIREBASE_SERVICE_ACCOUNT_JSON: {}", e.getMessage());
+            }
         }
 
         // 2. Specific file path configured via env/properties (Local Windows Development)
         if (serviceAccountPath != null && !serviceAccountPath.isBlank()) {
-            Path path = Paths.get(serviceAccountPath.trim().replace("\"", ""));
-            if (Files.exists(path)) {
-                log.info("Loading Firebase credentials from path: {}", path.toAbsolutePath());
-                try (InputStream in = Files.newInputStream(path)) {
-                    return GoogleCredentials.fromStream(in);
+            try {
+                Path path = Paths.get(serviceAccountPath.trim().replace("\"", ""));
+                if (Files.exists(path)) {
+                    log.info("Loading Firebase credentials from path: {}", path.toAbsolutePath());
+                    try (InputStream in = Files.newInputStream(path)) {
+                        return GoogleCredentials.fromStream(in);
+                    }
+                } else {
+                    log.warn("Configured FIREBASE_SERVICE_ACCOUNT_PATH file does not exist: {}", path.toAbsolutePath());
                 }
-            } else {
-                throw new IllegalStateException(
-                        "Configured FIREBASE_SERVICE_ACCOUNT_PATH file does not exist: " + path.toAbsolutePath());
+            } catch (Exception e) {
+                log.warn("Failed to load key from FIREBASE_SERVICE_ACCOUNT_PATH: {}", e.getMessage());
             }
         }
 
         // 3. Standard Google Cloud environment variable
         String gcpCreds = System.getenv("GOOGLE_APPLICATION_CREDENTIALS");
         if (gcpCreds != null && !gcpCreds.isBlank()) {
-            Path gcpPath = Paths.get(gcpCreds.trim().replace("\"", ""));
-            if (Files.exists(gcpPath)) {
-                log.info("Loading Firebase credentials from GOOGLE_APPLICATION_CREDENTIALS: {}", gcpPath.toAbsolutePath());
-                try (InputStream in = Files.newInputStream(gcpPath)) {
-                    return GoogleCredentials.fromStream(in);
+            try {
+                Path gcpPath = Paths.get(gcpCreds.trim().replace("\"", ""));
+                if (Files.exists(gcpPath)) {
+                    log.info("Loading Firebase credentials from GOOGLE_APPLICATION_CREDENTIALS: {}", gcpPath.toAbsolutePath());
+                    try (InputStream in = Files.newInputStream(gcpPath)) {
+                        return GoogleCredentials.fromStream(in);
+                    }
                 }
+            } catch (Exception e) {
+                log.warn("Failed to load credentials from GOOGLE_APPLICATION_CREDENTIALS: {}", e.getMessage());
             }
         }
 
@@ -108,14 +120,20 @@ public class FirebaseConfig {
                 Paths.get(userHome, ".keys", "fundhub-key.json"),
                 Paths.get(userHome, "keys", "fundhub-key.json"),
                 Paths.get(userHome, ".keys", "crowdfund-key.json"),
-                Paths.get(userHome, "keys", "crowdfund-key.json")
+                Paths.get(userHome, "keys", "crowdfund-key.json"),
+                Paths.get("C:", "keys", "fundhub-key.json"),
+                Paths.get("C:", "keys", "crowdfund-key.json")
             };
 
             for (Path loc : commonLocations) {
                 if (Files.exists(loc)) {
-                    log.info("Found local Firebase service account key at: {}", loc.toAbsolutePath());
-                    try (InputStream in = Files.newInputStream(loc)) {
-                        return GoogleCredentials.fromStream(in);
+                    try {
+                        log.info("Found local Firebase service account key at: {}", loc.toAbsolutePath());
+                        try (InputStream in = Files.newInputStream(loc)) {
+                            return GoogleCredentials.fromStream(in);
+                        }
+                    } catch (Exception e) {
+                        log.warn("Could not read key from {}: {}", loc.toAbsolutePath(), e.getMessage());
                     }
                 }
             }
