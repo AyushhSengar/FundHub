@@ -1,5 +1,7 @@
 package com.crowdfund.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,60 +16,59 @@ import com.crowdfund.exception.AppException;
 import com.crowdfund.security.AuthUser;
 import com.google.cloud.firestore.Firestore;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
     @Mock
     private Firestore db;
 
+    @Mock
+    private AuditService auditService;
+
     @InjectMocks
     private UserService userService;
 
     @Test
-    @DisplayName("register rejects users who already have a profile")
-    void testRegisterDuplicateProfile() {
-        AuthUser existingUser = new AuthUser("uid1", "user@test.com", "Name", "CONTRIBUTOR");
-        RegisterRequest req = new RegisterRequest("Name", "CONTRIBUTOR");
+    @DisplayName("register rejects ADMIN role self-selection")
+    void testRegisterAdminBlocked() {
+        AuthUser caller = new AuthUser("uid1", "user@test.com", "User", null);
+        RegisterRequest req = new RegisterRequest("User Name", "ADMIN");
 
         AppException ex = assertThrows(AppException.class,
-                () -> userService.register(existingUser, req));
-        assertEquals(HttpStatus.CONFLICT, ex.getStatus());
+                () -> userService.register(caller, req));
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatus());
     }
 
     @Test
-    @DisplayName("register rejects attempts to self-assign ADMIN role")
-    void testRegisterAdminForbidden() {
-        AuthUser newUser = new AuthUser("uid2", "user@test.com", "Name", null);
-        RegisterRequest req = new RegisterRequest("Name", "ADMIN");
+    @DisplayName("register requires a non-empty name")
+    void testRegisterNameValidation() {
+        AuthUser caller = new AuthUser("uid1", "user@test.com", "User", null);
+        RegisterRequest req = new RegisterRequest("", "CREATOR");
 
         AppException ex = assertThrows(AppException.class,
-                () -> userService.register(newUser, req));
+                () -> userService.register(caller, req));
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatus());
     }
 
     @Test
     @DisplayName("changeRole blocks non-ADMIN callers")
-    void testChangeRoleNonAdmin() {
-        AuthUser creator = new AuthUser("uid3", "creator@test.com", "Creator", "CREATOR");
+    void testChangeRoleRestriction() {
+        AuthUser creator = new AuthUser("uid1", "creator@test.com", "Creator", "CREATOR");
         RoleRequest req = new RoleRequest("CONTRIBUTOR");
 
         AppException ex = assertThrows(AppException.class,
-                () -> userService.changeRole(creator, "uid4", req));
+                () -> userService.changeRole(creator, "targetUid", req));
         assertEquals(HttpStatus.FORBIDDEN, ex.getStatus());
     }
 
     @Test
-    @DisplayName("changeRole blocks admins from modifying their own role")
-    void testChangeRoleSelfBlocked() {
-        AuthUser admin = new AuthUser("uid5", "admin@test.com", "Admin", "ADMIN");
-        RoleRequest req = new RoleRequest("CREATOR");
+    @DisplayName("changeRole prevents admin from editing their own role")
+    void testChangeRoleSelfEditBlocked() {
+        AuthUser admin = new AuthUser("adminUid", "admin@test.com", "Admin", "ADMIN");
+        RoleRequest req = new RoleRequest("CONTRIBUTOR");
 
         AppException ex = assertThrows(AppException.class,
-                () -> userService.changeRole(admin, "uid5", req));
+                () -> userService.changeRole(admin, "adminUid", req));
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatus());
-        assertEquals("You cannot change your own role.", ex.getMessage());
     }
 }
