@@ -10,6 +10,7 @@ import com.crowdfund.exception.AppException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class MoneyTest {
 
@@ -54,4 +55,18 @@ class MoneyTest {
         assertEquals(new BigDecimal("0.00"), Money.fromFirestore(null));
         assertEquals(new BigDecimal("0.00"), Money.fromFirestore("not-a-number"));
     }
+
+    @Test
+    @DisplayName("formatINR properly formats BigDecimal amounts into Indian Rupee strings with Indian numbering")
+    void testFormatINR() {
+        assertEquals("INR", Money.CURRENCY_CODE);
+        assertEquals("₹", Money.CURRENCY_SYMBOL);
+        assertEquals("₹0.00", Money.formatINR(null));
+        assertEquals("₹500.50", Money.formatINR(new BigDecimal("500.50")));
+        assertEquals("₹1,000.00", Money.formatINR(new BigDecimal("1000.00")));
+        assertEquals("₹10,000.00", Money.formatINR(new BigDecimal("10000.00")));
+        assertEquals("₹1,00,000.00", Money.formatINR(new BigDecimal("100000.00")));
+        assertEquals("₹10,00,000.00", Money.formatINR(new BigDecimal("1000000.00")));
+    }
 }
+

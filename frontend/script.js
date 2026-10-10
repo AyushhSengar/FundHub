@@ -742,8 +742,8 @@ async function supportCampaign(campaignId) {
         title: "Demo Contribution",
         message: `"${c.title}". Remaining goal: ${formatCurrency(remaining)}. This records a simulated demo contribution for testing; no actual money transfer is made.`,
         field: "number",
-        label: "Simulated Amount",
-        placeholder: "Enter amount",
+        label: "Simulated Amount (₹)",
+        placeholder: "e.g. 500",
         confirmText: "Record Demo Contribution",
         validate: (text) => {
             if (!/^\d+(\.\d{1,2})?$/.test(text)) return "Enter a positive amount with at most 2 decimals.";

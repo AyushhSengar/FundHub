@@ -34,22 +34,22 @@ class MilestoneServiceTest {
         assertNotNull(milestones);
         assertEquals(4, milestones.size());
 
-        // 25% milestone ($250): achieved
+        // 25% milestone (₹250): achieved
         assertEquals(25, milestones.get(0).getTargetPercentage());
         assertEquals(new BigDecimal("250.00"), milestones.get(0).getThresholdAmount());
         assertTrue(milestones.get(0).isAchieved());
 
-        // 50% milestone ($500): achieved
+        // 50% milestone (₹500): achieved
         assertEquals(50, milestones.get(1).getTargetPercentage());
         assertEquals(new BigDecimal("500.00"), milestones.get(1).getThresholdAmount());
         assertTrue(milestones.get(1).isAchieved());
 
-        // 75% milestone ($750): not achieved
+        // 75% milestone (₹750): not achieved
         assertEquals(75, milestones.get(2).getTargetPercentage());
         assertEquals(new BigDecimal("750.00"), milestones.get(2).getThresholdAmount());
         assertFalse(milestones.get(2).isAchieved());
 
-        // 100% milestone ($1000): not achieved
+        // 100% milestone (₹1000): not achieved
         assertEquals(100, milestones.get(3).getTargetPercentage());
         assertEquals(new BigDecimal("1000.00"), milestones.get(3).getThresholdAmount());
         assertFalse(milestones.get(3).isAchieved());

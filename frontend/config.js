@@ -7,6 +7,7 @@
 //  - after deployment  : "https://your-backend.onrender.com"
 export const API_BASE_URL = "http://localhost:8080";
 
-// Money display. Change to "USD" / "en-US" if you prefer dollars.
+// Money display: Standard Indian Rupee (₹) formatting with en-IN locale
 export const CURRENCY = "INR";
 export const LOCALE = "en-IN";
+

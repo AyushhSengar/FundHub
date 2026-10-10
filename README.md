@@ -34,12 +34,12 @@ FundHub is a modern, full-stack Java web application for managing community fund
 
 | Layer | Technology | Purpose |
 |---|---|---|
-| **Backend Core** | Java 17, Spring Boot 3.3.5 (`spring-boot-starter-web`) | Application logic, request routing, role enforcement, business rules |
+| **Backend Core** | Java 17, Spring Boot 3.3.5 (`spring-boot-starter-web`) | Application logic, request routing, role enforcement, business rules, INR currency calculations |
 | **Server Security** | Firebase Admin SDK 9.4.1 | Token verification, server-side data access, atomic transactions |
-| **Testing** | JUnit 5, Mockito, AssertJ | Automated unit and integration testing (23 tests, 100% pass) |
+| **Testing** | JUnit 5, Mockito, AssertJ | Automated unit and integration testing (69 tests across 27 suites, 100% pass) |
 | **Build Tool** | Apache Maven 3.10.0+ | Dependency management and JAR packaging |
 | **Database & Identity** | Cloud Firestore, Firebase Authentication | User identity, real-time snapshot listeners |
-| **Frontend Presentation** | Semantic HTML5, Modern CSS3 | Responsive grid/flexbox layout, status pills, progress bars |
+| **Frontend Presentation** | Semantic HTML5, Modern CSS3 | Responsive dark fintech UI, Indian Rupee (₹) currency formatting, status pills |
 | **Client Scripting** | Vanilla ES Modules (`script.js`, `config.js`) | Form capture, DOM updates, token attachment, Firestore snapshot binding |
 
 ---
