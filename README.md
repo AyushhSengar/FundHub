@@ -1,185 +1,205 @@
-# FundHub — Modern Java Crowdfunding Platform
+# FundHub — Community Crowdfunding Platform
 
-FundHub is a modern, full-stack Java web application for managing community fundraising campaigns. It features three distinct user roles (**ADMIN**, **CREATOR**, and **CONTRIBUTOR**), an atomic server-side transaction engine, and a premium responsive UI.
+FundHub is a Java-based crowdfunding web application developed as a college academic project. It allows users to create fundraising campaigns, review and approve campaigns through an administrator, and record simulated contributions to track campaign progress.
 
----
+The application focuses on role-based access, campaign management, transparent funding progress, and a clean, responsive user interface.
 
-## Architecture Overview
+**Note:** FundHub is an academic demonstration project. It does not process real money or perform actual financial transactions.
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                          BROWSER / FRONTEND (HTML5/CSS3/JS)                 │
-│  • Modern Obsidian & Indigo Design System with Glassmorphism & Responsive UI│
-│  • Firebase Authentication (Client Sign-In & ID Token generation)           │
-│  • Cloud Firestore Real-time Listeners (Read-Only, Role-Scoped Feeds)       │
-└──────────────────────────────────────┬──────────────────────────────────────┘
-                                       │ Authorization: Bearer <Firebase ID Token>
-                                       ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                    JAVA BACKEND (Java 17 + Spring Boot 3.3.5)               │
-│  • FirebaseAuthFilter: Cryptographically verifies tokens & loads role       │
-│  • Controllers: AccountController, CampaignController                       │
-│  • Services: UserService, CampaignService, ContributionService              │
-│  • Security & Rules: Role checks, 2-decimal precision, Concurrency control  │
-│  • Firebase Admin SDK (Atomic Firestore Transactions)                       │
-└──────────────────────────────────────┬──────────────────────────────────────┘
-                                       ▼
-                        Google Cloud Firestore Database
-                        (users, campaigns, donations)
-```
+## Features
 
----
+- **Role-Based Access:** Separate dashboards for ADMIN, CREATOR, and CONTRIBUTOR.
+- **Campaign Management:** Create and manage fundraising campaigns.
+- **Admin Approval:** Administrators can approve or reject submitted campaigns.
+- **Funding Progress:** Track campaign targets, collected amounts, and completion status.
+- **Demo Contributions:** Record simulated contributions without real payments.
+- **Contribution History:** View previously recorded demo contributions.
+- **User Management:** View registered users and manage roles where authorized.
+- **Responsive UI:** Modern Ivory & Emerald theme designed for desktop and mobile.
+- **Indian Currency:** Display monetary amounts using the Indian Rupee symbol (₹).
+
+## User Roles
+
+### 1. ADMIN
+- View platform statistics.
+- Review pending campaigns.
+- Approve or reject campaigns.
+- Manage registered users and roles where supported.
+- Monitor campaign statuses.
+
+### 2. CREATOR
+- Create fundraising campaigns.
+- Submit campaigns for admin approval.
+- View personal campaigns and their statuses.
+- Track target amounts and funding progress.
+- View rejection reasons when applicable.
+
+### 3. CONTRIBUTOR
+- Browse approved campaigns.
+- Record simulated demo contributions.
+- View contribution history.
+- Track campaign progress and completion.
 
 ## Technology Stack
 
-| Layer | Technology | Purpose |
-|---|---|---|
-| **Backend Core** | Java 17, Spring Boot 3.3.5 (`spring-boot-starter-web`) | Application logic, request routing, role enforcement, business rules, INR currency calculations |
-| **Server Security** | Firebase Admin SDK 9.4.1 | Token verification, server-side data access, atomic transactions |
-| **Testing** | JUnit 5, Mockito, AssertJ | Automated unit and integration testing (69 tests across 27 suites, 100% pass) |
-| **Build Tool** | Apache Maven 3.10.0+ | Dependency management and JAR packaging |
-| **Database & Identity** | Cloud Firestore, Firebase Authentication | User identity, real-time snapshot listeners |
-| **Frontend Presentation** | Semantic HTML5, Modern CSS3 | Responsive dark fintech UI, Indian Rupee (₹) currency formatting, status pills |
-| **Client Scripting** | Vanilla ES Modules (`script.js`, `config.js`) | Form capture, DOM updates, token attachment, Firestore snapshot binding |
+| Technology | Purpose |
+|---|---|
+| Java | Backend business logic |
+| Spring Boot | Backend application and REST APIs |
+| Maven | Dependency management and build |
+| HTML5 | Frontend structure |
+| CSS3 | Styling and responsive design |
+| JavaScript | Browser interactions and API communication |
+| Firebase Authentication | User authentication, if configured |
+| Cloud Firestore | Application data storage, if configured |
+| JUnit 5 and Mockito | Automated testing |
 
----
+## Application Workflow
 
-## Role Permissions & Workflows
+1. A user signs in.
+2. The application identifies the user's role.
+3. A CREATOR submits a new campaign.
+4. The campaign receives PENDING status.
+5. An ADMIN approves or rejects the campaign.
+6. Approved campaigns become available to CONTRIBUTORS.
+7. A CONTRIBUTOR records a simulated demo contribution.
+8. The application updates funding progress.
+9. A campaign becomes COMPLETED when its funding target is reached.
 
-### 1. ADMIN
-- **Platform Analytics:** Views live counts of pending, approved, rejected, completed campaigns, total funds raised, and user distribution.
-- **Campaign Review:** Reviews submissions in `PENDING` status. Approves to `APPROVED` or rejects to `REJECTED` (with mandatory reason feedback).
-- **User Role Management:** Promotes registered users to `ADMIN`, `CREATOR`, or `CONTRIBUTOR` (cannot modify own role to prevent lockout).
+## Project Structure
 
-### 2. CREATOR
-- **Create Campaign:** Submits fundraising requests with Title ($\le 120$ chars), Description ($\le 2000$ chars), and Target Goal ($> 0$).
-- **Status Tracking:** Initially saved as `PENDING`. Tracks live progress %, target vs collected amounts, and admin feedback reasons.
-- **Search & Filter:** Real-time search across submitted campaigns.
+The project is organized into a Java backend and a web frontend. The exact directory structure may vary depending on the current implementation.
 
-### 3. CONTRIBUTOR
-- **Browse Campaigns:** Views approved and completed campaigns.
-- **Simulated Demo Contributions:** Records demo contributions up to the remaining goal amount.
-- **Contribution History:** Real-time ledger of all supported causes and amounts.
-- **Automatic Completion:** When collected amount meets the target goal, the campaign automatically transitions to `COMPLETED`.
-
----
-
-## Demo / Simulated Contribution Notice
-
-> **Academic / Demonstration Mode:**
-> FundHub is strictly designed as an academic demonstration. It does **NOT** integrate real payment gateways (Razorpay, Stripe, PayPal, UPI) and does **NOT** collect sensitive banking or card credentials. Contributions are recorded as simulated ledger entries with `simulated: true` stored in Firestore.
-
----
-
-## Folder Structure
-
-```
-c:\Users\ayush\OneDrive\Desktop\Java Sem 3\Project/
+```text
+FundHub/
 ├── backend/
-│   ├── pom.xml                     # Maven project descriptor (Java 17, Spring Boot 3.3.5)
-│   ├── Dockerfile                  # Container specification
-│   ├── .gitignore                  # Ignores target/ and key files
+│   ├── pom.xml
 │   └── src/
 │       ├── main/
-│       │   ├── java/com/crowdfund/
-│       │   │   ├── CrowdfundApplication.java
-│       │   │   ├── config/         (CorsConfig, FirebaseConfig)
-│       │   │   ├── controller/     (AccountController, CampaignController)
-│       │   │   ├── dto/            (AmountRequest, CreateCampaignRequest, ReasonRequest, RegisterRequest, RoleRequest)
-│       │   │   ├── exception/      (AppException, GlobalExceptionHandler)
-│       │   │   ├── security/       (AuthUser, FirebaseAuthFilter)
-│       │   │   ├── service/        (UserService, CampaignService, ContributionService)
-│       │   │   └── util/           (FirestoreSupport, Money, Text)
+│       │   ├── java/
 │       │   └── resources/
-│       │       └── application.properties
-│       └── test/java/com/crowdfund/ # 23 Automated JUnit 5 / Mockito Unit Tests
+│       └── test/
+│           └── java/
 ├── frontend/
-│   ├── index.html                  # FundHub Single-Page Application
-│   ├── style.css                   # Modern Design System (Indigo/Slate, Glassmorphism, Responsive)
-│   ├── script.js                   # Client interactions & live read listeners
-│   ├── config.js                   # Backend endpoint configuration
-│   └── firestore.rules             # Production security rules (zero client direct writes)
-├── index.html                      # Root entry point
-├── style.css                       # Root stylesheet
-├── script.js                       # Root script
-├── config.js                       # Root config
-├── firestore.rules                 # Root security rules
-└── README.md                       # Comprehensive documentation
+│   ├── index.html
+│   ├── style.css
+│   ├── script.js
+│   └── config.js
+└── README.md
 ```
 
----
+## Prerequisites
 
-## Local Development Guide
+Install the following tools before running the project:
 
-### Prerequisites
-- **Java 17+** (OpenJDK / Temurin recommended)
-- **Apache Maven 3.8+**
-- **Modern Web Browser** (Chrome, Edge, Firefox, Safari)
+- Java Development Kit (JDK) compatible with the project's Maven configuration.
+- Apache Maven.
+- A modern web browser.
+- Firebase project credentials if Firebase services are enabled.
 
-### 1. Configure Firebase Service Account Key
-1. In the Firebase Console, go to **Project Settings** $\rightarrow$ **Service Accounts** $\rightarrow$ **Generate New Private Key**.
-2. Save the JSON file outside your repository (e.g., `C:\keys\fundhub-key.json`).
-3. Set the environment variable:
-   ```powershell
-   # Windows (PowerShell)
-   $env:FIREBASE_SERVICE_ACCOUNT_PATH="C:\keys\fundhub-key.json"
+Verify the installations:
 
-   # macOS / Linux (Bash)
-   export FIREBASE_SERVICE_ACCOUNT_PATH="/path/to/fundhub-key.json"
-   ```
-
-### 2. Run the Java Backend
 ```bash
-cd backend
+java -version
+mvn -version
+```
+
+## Running the Backend
+
+Open a terminal in the project's `backend` directory.
+
+Build and test the project:
+
+```bash
+mvn clean test package
+```
+
+Start the Spring Boot application:
+
+```bash
 mvn spring-boot:run
 ```
-Test health endpoint: Open `http://localhost:8080/api/health` $\rightarrow$ `{"status":"ok"}`.
 
-### 3. Run Automated Tests
-```bash
-cd backend
-mvn test
-```
-All 23 unit and integration tests across Controllers, Services, Utilities, Security, and Exception Handlers will execute.
+The backend URL and port depend on the application's configuration. Check `application.properties` or `application.yml` for the configured port and API endpoints.
 
-### 4. Run the Frontend
-Serve the project directory over a local HTTP server:
+## Running the Frontend
+
+If the frontend is a static HTML/CSS/JavaScript application, open a terminal in the actual `frontend` directory and run:
+
 ```bash
-# Using Python
 python -m http.server 5500
-
-# Or using VS Code Live Server extension (Port 5500)
 ```
-Open `http://localhost:5500` in your web browser.
+
+Open the following URL in your browser:
+
+http://localhost:5500
+
+Ensure the frontend API configuration points to the correct running backend URL.
+
+If your project uses a different frontend entry point or startup command, follow the configuration in the repository.
+
+## Firebase Configuration
+
+If Firebase is enabled:
+
+1. Configure Firebase Authentication and the required Firestore database.
+2. Set up the required authentication providers.
+3. Configure the backend using a valid Firebase Admin SDK service account.
+4. Store service-account credentials outside the public frontend and Git repository.
+5. Configure the required environment variables and Firestore Security Rules.
+6. Verify that frontend API URLs and backend configuration match.
+
+Never commit private service-account credentials or secrets to GitHub.
+
+## Demo Contributions
+
+FundHub uses simulated contributions for academic demonstration.
+
+- No real money is transferred.
+- No payment gateway is integrated.
+- No card, bank account, or UPI details are required.
+- Contribution records are used to demonstrate funding calculations and campaign progress.
+
+## Testing
+
+Run the automated backend tests from the `backend` directory:
+
+```bash
+mvn clean test
+```
+
+Build the complete backend package:
+
+```bash
+mvn clean test package
+```
+
+The test output reports the number of tests executed and any failures or errors.
+
+## Security Notes
+
+- Enforce role-based authorization on protected backend endpoints.
+- Validate user input on the backend.
+- Protect Firebase credentials.
+- Restrict unauthorized campaign and user management operations.
+- Keep Firestore Security Rules appropriately restrictive.
+- Never treat simulated contributions as actual financial transactions.
+
+## Future Improvements
+
+Potential future enhancements include:
+
+- Improved campaign discovery and filtering.
+- More detailed campaign analytics.
+- Additional automated integration tests.
+- Enhanced accessibility and responsive layouts.
+
+## Academic Project
+
+**Project Name:** FundHub  
+**Project Type:** Java-Based Web Application  
+**Purpose:** College academic project and demonstration of Java backend development, role-based access, database integration, and web application design.
 
 ---
 
-## API Reference (Bearer Token Required)
-
-| Method | Endpoint | Authorized Role | Request Body | Description |
-|---|---|:---:|---|---|
-| `GET` | `/api/health` | Public | None | Health check |
-| `GET` | `/api/me` | Any Authenticated | None | Returns verified caller info |
-| `POST` | `/api/register` | New User (No Profile) | `{ name, role }` | Registers Creator or Contributor profile |
-| `POST` | `/api/campaigns` | `CREATOR` | `{ title, description, targetAmount }` | Creates new campaign in `PENDING` state |
-| `POST` | `/api/campaigns/{id}/approve` | `ADMIN` | None | Approves pending campaign |
-| `POST` | `/api/campaigns/{id}/reject` | `ADMIN` | `{ reason }` | Rejects pending campaign with feedback |
-| `POST` | `/api/campaigns/{id}/contributions` | `CONTRIBUTOR` | `{ amount }` | Records atomic simulated contribution |
-| `PATCH` | `/api/users/{uid}/role` | `ADMIN` | `{ role }` | Updates authorized user role |
-
----
-
-## Semester 3 Viva Concepts
-
-1. **Encapsulation:** Java DTO records ([`AmountRequest`](file:///c:/Users/ayush/OneDrive/Desktop/Java%20Sem%203/Project/backend/src/main/java/com/crowdfund/dto/AmountRequest.java), [`CreateCampaignRequest`](file:///c:/Users/ayush/OneDrive/Desktop/Java%20Sem%203/Project/backend/src/main/java/com/crowdfund/dto/CreateCampaignRequest.java)) ensure immutability and valid construction.
-2. **Layered Architecture:** Clear separation between Controllers (REST API), Services (Business Logic), Utilities (Stateless helpers), and Security Filters.
-3. **Concurrency Control:** Atomic transactions in [`ContributionService.java`](file:///c:/Users/ayush/OneDrive/Desktop/Java%20Sem%203/Project/backend/src/main/java/com/crowdfund/service/ContributionService.java) prevent race conditions when multiple contributors support a campaign simultaneously.
-4. **Exception Handling:** Centralized [`GlobalExceptionHandler`](file:///c:/Users/ayush/OneDrive/Desktop/Java%20Sem%203/Project/backend/src/main/java/com/crowdfund/exception/GlobalExceptionHandler.java) translates [`AppException`](file:///c:/Users/ayush/OneDrive/Desktop/Java%20Sem%203/Project/backend/src/main/java/com/crowdfund/exception/AppException.java) instances into standard HTTP responses.
-
-
-
-
-
-mvn spring-boot:run 
-run the above cmd in the backend folder
-
+FundHub demonstrates how a role-based crowdfunding workflow can be implemented using Java, web technologies, and Firebase without processing real-money transactions.
